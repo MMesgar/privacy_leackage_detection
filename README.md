@@ -1,5 +1,6 @@
 ## PILD
 Project and Dataset for Personal Information Leakage Detection (PILD) in Conversations.
+More information about dataset and summary of paper, please click [here](https://docs.google.com/document/d/1Z5TVdDWOzYErcDsft8IpPxOgoCdfsX6DkopLj237fgg/edit?usp=sharing) .
 
 
 ### Data Pre-processing
