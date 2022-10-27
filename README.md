@@ -4,13 +4,21 @@ Project and Dataset for Privacy Leakage Detection in Conversations.
 ## Environment
 
 torch >= 1.7.1
+
 transformers==4.17.0
+
 scipy
+
 datasets
+
 pandas
+
 scikit-learn
+
 prettytable
+
 gradio
+
 setuptools
 
 ### Dataset Preparation
