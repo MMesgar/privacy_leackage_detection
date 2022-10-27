@@ -1,48 +1,55 @@
-## PILD
-Project and Dataset for Personal Information Leakage Detection (PILD) in Conversations.
-More information about dataset and summary of paper, please click [here](https://docs.google.com/document/d/1Z5TVdDWOzYErcDsft8IpPxOgoCdfsX6DkopLj237fgg/edit?usp=sharing) .
+## PLD
+Project and Dataset for Privacy Leakage Detection in Conversations.
 
+## Environment
 
-### Data Pre-processing
-```
-mkdir model output
-python preprocess_rep.py -lm bert -input ./dataset/persona_linking_test.json -output ./dataset/persona_linking_test.bert
-python preprocess_rep.py -lm bert -input ./dataset/persona_linking_train.json -output ./dataset/persona_linking_train.bert
-```
+torch >= 1.7.1
+transformers==4.17.0
+scipy
+datasets
+pandas
+scikit-learn
+prettytable
+gradio
+setuptools
 
-### Test Set (to trec format)
-```
-python preprocess_trec.py -input ./dataset/persona_linking_test.json -output ./output/persona_linking_test.txt
-```
+### Dataset Preparation
+
+Our dataset is from NLI task. It is a csv file. The first column is anchor sample, the secound column is positive sample, if using hard negative, the third column is hard negative sample. The anchor and postive samples are sentence pairs with entailment labels. If one anchor has several entailment sentences, we only select one to avoid false negatives.
+
+All data files used are put in the dataset folder.
 
 ### Model Training
+
+You can train NLICL model by running:
+
 ```
-python train.py -epochs 200 -save_model ./model/bert_ -method att_sparse -alpha 0.4 -train_dataset ./dataset/persona_linking_train.bert -dev_dataset ./dataset/persona_linking_dev.bert
+python train.py \
+    --model_name_or_path bert-base-uncased \
+    --train_file data/DNLI_all_pairs..csv \
+    --output_dir result/DNLI_all_pairs \
+    --num_train_epochs 1 \
+    --per_device_train_batch_size 128 \
+    --learning_rate 5e-5 \
+    --max_seq_length 25 \
+    --pooler_type cls \
+    --temp 0.05 \
+    --do_train \
+    
+python pild_to_huggingface.py --result/DNLI_all_pairs    
 ```
+You can set arguments above accourding to your need. After converting the NLICL checkpoint to Huggingface style, you can use the model fot esting
+
+### Model Testing 
+First, make sure you setup proper path of input(path to the file 'persona_linking_test.json'), pld_model and output_result in test_pld.py. Then run test_pld.py to get result of cosine similarity of each sentence pairs in PERSONA-LEAKAGE test dataset.
+
+[trec_eval](https://trec.nist.gov/trec_eval/) is required.
+
+If the directory to output result is 'output/DNLI_all_pairs.result', path to trec_eval is '/Desktop/trec_eval-9.0.7/trec_eval'. Run the following to print 5 evaluation metrics (P@1, P@2, Rprec, MAP, NDCG):
+
 ```
-python train.py -epochs 200 -save_model ./model/bert_ -method att_sharp -alpha 0.4 -gamma 6.0 -train_dataset ./dataset/persona_linking_train.bert -dev_dataset ./dataset/persona_linking_dev.bert
+/Desktop/trec_eval-9.0.7/trec_eval output/persona_linking_test_utterance_based.txt output/DNLI_all_pairs.result -m map -m P.1,2 -m Rprec -m ndcg
 ```
 
-### Model Testing (Note: [trec_eval](https://trec.nist.gov/trec_eval/) is required.)
-```
-python test.py -model ./model/bert_att_sparse_0.01_0.4_E200* -test_dataset ./dataset/persona_linking_test.bert -test_result ./output/bert_att_sparse_0.01_0.4_E200.result
-~/Desktop/trec_eval-9.0.7/trec_eval output/persona_linking_test.txt output/bert_att_sparse_0.01_0.4_E200.result -m map -m P.1,2,3,5 -m Rprec -m ndcg
-```
-```
-python test.py -model ./model/bert_att_sharp_0.01_0.4_6.0_E200* -test_dataset ./dataset/persona_linking_test.bert -test_result ./output/bert_att_sharp_0.01_0.4_6.0_E200.result
-~/Desktop/trec_eval-9.0.7/trec_eval output/persona_linking_test.txt output/bert_att_sharp_0.01_0.4_6.0_E200.result -m map -m P.1,2,3,5 -m Rprec -m ndcg
-```
 
-### Citation
-```
-@inproceedings{xu-etal-2020-personal,
-    title = "Personal Information Leakage Detection in Conversations",
-    author = "Xu, Qiongkai and Qu, Lizhen and Gao, Zeyu and Haffari, Gholamreza",
-    booktitle = "Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
-    month = Nov,
-    year = "2020",
-    address = "Online",
-    publisher = "Association for Computational Linguistics",
-    pages = "6567--6580",
-}
-```
+
